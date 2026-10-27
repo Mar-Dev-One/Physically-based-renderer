@@ -1,8 +1,7 @@
 // game/main.c
 //
-// The game runtime: loads a scene file (scenes/<name>.json in the project,
-// as saved by the editor) and plays it. No ImGui, no command console, no
-// command server -- those are editor-only (editor/main.c). An
+// The game runtime: loads a scene file (scenes/<name>.json in the project)
+// and plays it. No ImGui, no command console, no command server. An
 // export ships this program, renamed after the project.
 //
 //   Game [options] [scene] [hdri]
@@ -18,8 +17,7 @@
 //     --fullscreen  fullscreen on the primary monitor
 //     --check PNG   load the scene in a hidden window, render a few frames,
 //                   save the picture to PNG and exit: 0 if the scene loaded
-//                   and rendered, 1 if not. The editor checks every export
-//                   this way, and tests/golden_tests.c compares the pictures
+//                   and rendered, 1 if not. tests/golden_tests.c compares the pictures
 //                   with saved ones. Behaviours (Spin) don't run, so the
 //                   picture is always the scene as saved.
 //     --view NAME   show a debug view instead of the lit scene: albedo,
@@ -43,7 +41,7 @@
 // watches.
 //
 // The game runs the scene's behaviours (World/World.h world_tick(): Spin
-// components turn their entities), as the editor's Play mode does, and lets
+// components turn their entities), and lets
 // the player move PlayerController entities (World/PlayerController.h) with
 // the project's input actions: keys and a gamepad at once, the mouse while
 // the cursor is locked -- from the start when there's a controller, again
@@ -53,8 +51,7 @@
 // they were.
 //
 // The scene file's "environment" (World/Environment.h) sets the HDRI,
-// exposure, ambient strength and skybox, as they were in the editor when it
-// was saved. A scene that names no HDRI gets the project's default HDRI
+// exposure, ambient strength and skybox, as they were when it was saved. A scene that names no HDRI gets the project's default HDRI
 // (which an export copies), or DEFAULT_HDRI without a project.json.
 //
 // The view comes from the scene's first Camera entity. A scene without one
@@ -92,7 +89,7 @@
 #define DEFAULT_SCENE "orrery_plaza"   // for a project folder without a project.json
 #define DEFAULT_HDRI  "hdri/citrus_orchard_road_puresky_4k.hdr"
 
-// Same shadow setup as the editor, so a scene looks the same in both.
+// Same shadow setup as the testbed, so a scene looks the same in both.
 #define SHADOW_MAP_SIZE 2048
 #define CASCADE_COUNT   4
 

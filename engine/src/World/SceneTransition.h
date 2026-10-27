@@ -12,7 +12,7 @@
 //   fading out the view darkens over the trigger's fade_seconds
 //   load       scene_transition_update() hands back the scene to load, once;
 //              the caller loads it its own way (the game: its scenes/ file;
-//              the editor's Play: into its copy) and reports back with
+//              a play mode: into its copy) and reports back with
 //              scene_transition_loaded(), which puts the player at the spawn
 //   fading in  the view brightens again
 //

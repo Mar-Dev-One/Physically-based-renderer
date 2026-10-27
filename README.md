@@ -1,7 +1,7 @@
 # PBR-Renderer
 
-A physically based renderer and game engine in C11 and OpenGL 4.6, with an editor and a game
-runtime.
+A physically based renderer and game engine in C11 and OpenGL 4.6, built as a static library,
+with a testbed and a game runtime.
 
 - **Rendering**: Cook-Torrance GGX metallic-roughness shading, image-based lighting from HDRIs
   (multi-scatter, specular occlusion), cascaded shadow maps with filtered soft shadows, HDR
@@ -9,10 +9,9 @@ runtime.
 - **Scene**: an entity-component world with generational handles, reflected components, a
   reference-counted asset cache, and JSON scene files.
 - **Commands**: every scene change goes through one JSON command API, with validation, clear
-  errors, and undo/redo grouped into transactions. The in-app console, the GUI and remote clients
-  all use it.
+  errors, and undo/redo grouped into transactions.
 - **Remote control**: a localhost WebSocket server speaking JSON-RPC 2.0, with change
-  notifications and offscreen screenshots.
+  notifications.
 
 The project is a work in progress; see [docs/ROADMAP.md](docs/ROADMAP.md) for what's done and
 what's next.
@@ -32,147 +31,59 @@ cmake --build build --config Release
 If you cloned without `--recursive`, run `git submodule update --init` first (GLFW, cglm and
 cimgui are submodules; the other dependencies are vendored in `engine/deps/`).
 
-This builds two apps on the same engine library. Both find their files at runtime (the engine's
-shaders, and a project folder), so they can be started from any directory.
+This builds the engine as one static library, `PBR_Engine`, and two programs on it. Both find
+their files at runtime (the engine's shaders, and a project folder), so they can be started from
+any directory.
 
-- **Editor** (`build/editor/Release/Editor.exe` with Visual Studio): the projects, panels, Viewport,
-  command console and command server described below.
+- **Testbed** (`build/testbed/Release/Testbed.exe` with Visual Studio): builds a scene in code
+  with the World API -- a ground plane, a grid of spheres from smooth to rough (dielectric and
+  metal), a polished Suzanne turning on a pedestal, a sun, a point light and a spot light under an
+  HDRI sky -- and draws it. Left-drag orbits, the wheel zooms, Esc quits. `--check PNG` renders it
+  once in a hidden window and saves the picture; `--view NAME` shows a debug view (albedo,
+  normals, roughness, metallic, ao, shadow, lighting, wireframe, lights). Its
+  [main.c](testbed/main.c) is the shortest example of a program using the engine.
 - **Game** (`build/game/Release/Game.exe`): the game runtime, what an export ships. It plays a
   project's scene with no UI, console or command server:
   `Game [--width N] [--height N] [--fullscreen] [--project DIR] [--check PNG] [scene] [hdri]`, where
   `scene` is a name under the project's `scenes/` (default: the project's startup scene) or a path
   to a `.json` file, and `hdri` is a `.hdr` under the project that overrides the scene's own. The
   project is `--project`, else a `project.json` next to the program (an exported game), else
-  `assets/`. The scene file carries its environment (HDRI, exposure, ambient strength, skybox), so
-  it looks as it did in the editor. It views the scene through its first Camera entity; without
-  one, the camera frames the scene's objects (not its ground plane), left-drag orbits and the
-  wheel zooms. The window's title and size come from the project. The game runs the scene's
-  behaviours: a `Spin` component turns its entity at `degrees_per_second`, as in the editor's Play
-  mode. Esc quits. A Debug build is a console program, so its log shows in the terminal; a Release
-  build opens no console and writes `log.txt` next to itself, and if it has to close (no OpenGL
-  4.6, a startup scene that doesn't load) it says why in a message box first.
+  `assets/`. The scene file carries its environment (HDRI, exposure, ambient strength, skybox). It
+  views the scene through its first Camera entity; without one, the camera frames the scene's
+  objects (not its ground plane), left-drag orbits and the wheel zooms. The window's title and
+  size come from the project. The game runs the scene's behaviours: a `Spin` component turns its
+  entity at `degrees_per_second`. Esc quits. A Debug build is a console program, so its log shows
+  in the terminal; a Release build opens no console and writes `log.txt` next to itself, and if it
+  has to close (no OpenGL 4.6, a startup scene that doesn't load) it says why in a message box
+  first.
 
-**Exporting a game.** **Export** (Viewport toolbar, or File > Export Game) makes a folder a player
-can run: `<project name>.exe`, the C++ runtime DLLs it needs, the engine's shaders, `project.json`,
-every saved scene, and only the models and HDRIs those scenes use. Double-clicking the `.exe`
-plays the startup scene in a window titled and sized from Project Settings; its log goes to
-`log.txt` beside it. Only saved scenes are exported. After copying, the editor runs the exported
-game once in a hidden window (`--check`) and shows what it rendered, so a broken export shows up
-in the editor rather than on a player's PC. Build the Release game first so the export runs on PCs
-without Visual Studio (the dialog warns otherwise):
+**Exporting a game.** `project_export()` ([engine/src/Project/Project.h](engine/src/Project/Project.h))
+makes a folder a player can run: the Game renamed after the project, the C++ runtime DLLs it
+needs, the engine's shaders, `project.json`, every saved scene, and only the models and HDRIs
+those scenes use. Build the Release game first so the export runs on PCs without Visual Studio:
 
 ```sh
 cmake --build build --config Release --target Game
 ```
 
-## Using the editor
+## Using the engine
 
-**Projects.** The editor works on a project: a folder with a `project.json` (name, startup scene,
-window size, default HDRI) and `scenes/`, `models/`, `hdri/` and `textures/`. Every model and HDRI
-path in a scene is relative to it. Without `--project` the editor opens the sample project,
-`assets/`: its startup scene `model_viewer` is the spinning model on a ground plane, and
-`material_grid` is the metallic × roughness sphere grid for checking IBL and the BRDF.
+A program fills in an `App` ([engine/src/App.h](engine/src/App.h)) with `on_init`, `on_frame`,
+`on_resize` and `on_shutdown` hooks and calls `run()`. In them it builds a `world`
+([World/World.h](engine/src/World/World.h)) -- `world_create()`, then components such as
+`world_add_mesh_renderer()` (a model from the asset cache, or `assets_builtin()` shapes) and
+`world_add_light()` -- or loads one from a scene file (`deserialize_scene()`), and each frame calls
+`world_update()` and `scene_renderer_draw()` ([Renderer/SceneRenderer.h](engine/src/Renderer/SceneRenderer.h)).
+[testbed/main.c](testbed/main.c) does exactly that.
 
-- **File > New Project** creates a folder (by default in `Documents/PBR Projects`) with a starter
-  scene — ground, sun, a cube and a camera — and opens it. **Open Project** takes a project folder;
-  **Recent Projects** lists the last ten.
-- **New Scene / Open Scene / Save (Ctrl+S) / Save As** work on `scenes/` in the project. The title
-  bar shows `*` while there are unsaved changes; opening something else or quitting asks first.
-  Opening a scene starts a fresh undo history.
-- **Import Asset** copies a `.glb`, `.gltf` (with the buffers and images it names), `.obj` (with its
-  `.mtl` and textures) or `.hdr` into the project.
-- **Project Settings** sets the name, the startup scene the game plays, its window size, and the
-  HDRI new scenes start with.
+**Projects.** A project is a folder with a `project.json` (name, startup scene, window size,
+input bindings) and `scenes/`, `models/`, `hdri/` and `textures/`; every path in a scene is
+relative to it. [assets/](assets/) is the sample project, and [assets/scenes/](assets/scenes/)
+holds two example scenes.
 
-**Panels.** Every panel can be closed, re-docked or pulled out into its own window; **View** turns
-each one back on. The first time, they're arranged around the Viewport:
-
-- **Scene**: the project and scene, **Save** and **Frame all**; **Add** puts a model from the
-  project, a cube, sphere or plane (at the size given), a point light, spot light or sun, a camera
-  matching the current view, a reflection probe or an empty entity at the centre of the view; and
-  the scene's **Environment**, saved with it: HDRI, IBL, skybox and its blur, ambient strength,
-  exposure and auto-exposure, tone mapping (ACES, AgX, PBR Neutral), bloom, and ambient occlusion
-  with its radius.
-- **Renderer**: how the editor views the scene (not saved with it): anti-aliasing (off, FXAA, TAA),
-  the debug view, shadows on or off, where the sun's cascades split, tinting by cascade, and
-  unclustered lighting (the reference clustered lighting must match). **Reload shaders** rebuilds
-  every shader now; **Bake reflections** captures the reflection probes again. Below, what the
-  last frame drew: lights (and how full the cluster lists are), which lights got shadow maps,
-  reflection probes, the environment and the GPU frame time.
-- **Entities**: the scene as a tree, with each entity's kind (sun, spot light, camera, probe,
-  empty) and its ID. Type in the filter to list only matching names. Drag an entity onto another
-  to parent it there, or onto *scene root* to unparent it; it stays where it is in the world.
-  Right-click for Frame, Duplicate, Unparent and Delete.
-- **Inspector**: the selected entity's fields (see Editing below).
-- **Assets**: the project's models (**Add** places one) and HDRIs (**Use** lights the scene with
-  one), **Import...**, and the models in memory with their reference counts, triangles and
-  materials; **Unload unused** frees the ones nothing uses.
-- **History**: every undo step, newest last; click one to go back (or forward) to it.
-- **Console** (F1), **Log** (opens by itself on an error) and **GPU timings**.
-
-The status bar along the bottom shows the scene (`*` when unsaved), whether it's playing, the
-selection, the command server and its clients, and the frame time.
-
-**Viewport:** the scene is drawn in the **Viewport** panel, docked in the middle the first time;
-the image always matches its size. Orbit, zoom, picking and the gizmo work inside it. Its toolbar
-holds Play / Pause / Step, the gizmo's mode, space and snapping; then the camera, the debug view,
-**Overlays** and **Export**.
-
-- **Camera:** look through the editor's own camera or any Camera entity, to see what a player
-  sees from it. Dragging or zooming goes back to the editor camera from that view. **Game camera**
-  makes Play look through the scene's first Camera, as the exported game does.
-- **Overlays**, drawn over the picture: a marker per light in its color (a sun has rays), with
-  the selected light's reach — a point light's range as three rings, a spot light's cone out to
-  its range, a sun's direction; each Camera's view as a small pyramid; each reflection probe's
-  box; and, when turned on, a 1 m grid on the ground.
-
-**Play:** **Play** (Ctrl+P) runs a copy of the scene in the Viewport — Spin components turn — with
-a green border (amber while paused; Ctrl+Shift+P pauses, F10 steps one frame). While playing
-you can still select, inspect and move things, and remote clients work on the copy too; **Stop**
-throws the copy away, environment changes included, and the edited scene is exactly as it was.
-There's no undo while playing, and saving waits until you stop.
-
-**Selecting:** click an object in the view (a short click; dragging still orbits) or its name in
-the **Entities** panel. The selection is outlined in orange with its name; lights, cameras and
-probes are picked by clicking their marker. **F** frames the selection, **Esc** clears it (and
-quits when nothing is selected), and clicking empty space deselects.
-
-**Editing:** the **Inspector** shows the selected entity's name, parent and every component as
-editing fields — drags for numbers and vectors (within each field's range), color pickers,
-checkboxes, dropdowns for enums and models, and a checkbox per material override. **Add
-component...** adds a MeshRenderer, Light, Camera, Spin, ReflectionProbe, PlayerController or SceneTrigger; the **X** on a
-component's header removes it; **Delete** removes the entity. **Edit** (and the shortcuts below)
-also undoes and redoes (naming the step), duplicates the selection with its children beside it
-(**Ctrl+D**), deletes it (**Delete**), unparents it and selects its parent. Every edit runs as a
-command, exactly like the console or a script: it is validated (a rejected value shows in red
-and changes nothing), reaches connected clients, and is undoable — a whole drag, a duplicate or a
-reparent is one step.
-
-**Gizmo:** the selection gets move / rotate / scale handles in the view —
-**W** / **E** / **R** switch between them. The Viewport toolbar has the **Local / World** toggle (scale
-always uses the object's own axes) and **Snap** with its step (meters, degrees or scale factor);
-holding **Ctrl** while dragging flips snapping. A drag is one undoable step, like an Inspector edit,
-and works on parented entities (the result is stored relative to the parent).
-
-Shortcuts work whichever panel has focus, except while typing in a text field (Help > Keyboard
-shortcuts lists them):
-
-| Input | Action |
-|---|---|
-| Left mouse drag | Orbit the camera |
-| Mouse wheel | Zoom |
-| W / E / R | Move / rotate / scale gizmo |
-| F | Frame the selection |
-| Ctrl+D / Delete | Duplicate / delete the selection |
-| Ctrl+Z / Ctrl+Y | Undo / redo |
-| Ctrl+S | Save the scene |
-| Ctrl+P / Ctrl+Shift+P / F10 | Play or stop / pause or resume / step one frame |
-| F1 | Command console |
-| Esc | Clear the selection, or quit |
-
-### Command console
-
-The console (F1) runs the same JSON commands that remote clients send:
+**Commands.** Every scene change can also go through one JSON command API
+([Commands/Commands.h](engine/src/Commands/Commands.h)), with validation, clear errors and
+undo/redo grouped into transactions:
 
 ```json
 {"cmd": "place_model", "args": {"model": "builtin:sphere", "size": 0.3, "on_ground": true}}
@@ -180,24 +91,14 @@ The console (F1) runs the same JSON commands that remote clients send:
 
 Commands cover entities and components (`entity.create`, `component.set`, ...), high-level
 placement (`place_model`, `entity.place` relative to other entities), scene files (`scene.save`,
-`scene.load`, `scene.list`), undo/redo (`history.*`), batches, and app-level settings such as the
-camera and environment. Whatever the panels can set, a command can too: `view.look_through` picks
-the camera, `render.set` the render settings (shadows and cascade splits included), `render.stats`
-reports what the last frame drew, `render.reload_shaders` rebuilds the shaders, and `play.set`
-takes `game_camera`. `scene.describe` shows the current world. Saved scenes live in
-[assets/scenes/](assets/scenes/); two example scenes are included. A saved scene
-holds the entities and the environment (HDRI, IBL and skybox switches, sky blur, exposure, ambient
-strength); loading it with `replace` restores both, while merging into the current scene adds the
-entities only.
+`scene.load`, `scene.list`), undo/redo (`history.*`) and batches; `scene.describe` shows the
+current world. A program can add commands of its own (`command_context.host_commands`).
 
-## Remote control
-
-When the editor starts, it opens a command server on `127.0.0.1` and writes how to reach it
-(port and token) to `~/.pbr-renderer/server.json`. Any WebSocket client can connect to
-`ws://127.0.0.1:<port>/?token=<token>` and send the same commands as the console, as JSON-RPC 2.0;
-every change is pushed back to connected clients as a `scene.changed` notification, and
-`view.screenshot` returns an offscreen render as a PNG. See
-[engine/src/Net/CommandServer.h](engine/src/Net/CommandServer.h) and
+**Remote control.** `server_start()` ([Net/CommandServer.h](engine/src/Net/CommandServer.h)) opens
+a command server on `127.0.0.1` and writes how to reach it (port and token) to
+`~/.pbr-renderer/server.json`. Any WebSocket client can connect to
+`ws://127.0.0.1:<port>/?token=<token>` and send the same commands as JSON-RPC 2.0; every change is
+pushed back to connected clients as a `scene.changed` notification. See
 [tests/server_test.py](tests/server_test.py) for a stdlib-only Python client.
 
 ## Models
@@ -214,9 +115,8 @@ Both are converted to the same `model` / `material` / `mesh` types and drawn wit
 `engine/shaders/pbr.*`. Not supported yet: skinning and animation, morph targets, Draco/meshopt
 compression, `KHR_texture_transform`, and second UV sets.
 
-To use a model, bring it into the project with **File > Import Asset** (or put it in the project's
-`models/`); it then appears in **Add > Model** and the Inspector's model list. HDRIs work the same
-way: an equirectangular `.hdr` in the project's `hdri/`. [Poly Haven](https://polyhaven.com/hdris)
+To use a model, put it in the project's `models/` and load it with `assets_load_model()` (or name
+it in a scene file). HDRIs work the same way: an equirectangular `.hdr` in the project's `hdri/`. [Poly Haven](https://polyhaven.com/hdris)
 is a good source.
 
 ## Project layout
@@ -232,9 +132,9 @@ engine/src/
   Commands/        command API, undo/redo history, JSON-RPC
   Net/             localhost WebSocket command server
   UI/              ImGui layer, entity panel, inspector, command console, log
-editor/            the editor app (ImGui panels, console, command server)
 engine/shaders/    the engine's GLSL shaders
-game/              the game runtime (plays a project's scene; no editor UI) -- what an export ships
+testbed/           builds a scene in code and draws it -- the engine used as a library
+game/              the game runtime (plays a project's scene; no UI) -- what an export ships
 assets/            the default project: models, HDRIs, textures, scenes
 tests/             headless C tests and end-to-end server tests
 docs/              roadmap

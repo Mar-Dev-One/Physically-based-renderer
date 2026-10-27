@@ -4,7 +4,7 @@
 
 // Move / rotate / scale handles drawn over the 3D view: a C face on
 // ImGuizmo (engine/deps/ImGuizmo, C++), the way cimgui is one on Dear ImGui.
-// Only what the editor uses. Call between imgui_layer_new_frame() and
+// Only the move/rotate/scale handles. Call between imgui_layer_new_frame() and
 // imgui_layer_render(); matrices are column-major (cglm's layout).
 
 typedef enum gizmo_operation

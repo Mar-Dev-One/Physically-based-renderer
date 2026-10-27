@@ -1,12 +1,14 @@
 # Roadmap
 
-The **renderer, editor and game runtime**. An earlier AI scene-builder track (a Python agent, an
-MCP server and an in-app chat panel) was removed on 2026-10-27 to keep this a pure engine; its
-section below is kept as history. What it built for the engine stays: the World, the command layer
-with undo, and the localhost command server, which any external tool can still drive.
+The **engine** -- one static library, `PBR_Engine` -- with a testbed and the game runtime. On
+2026-10-27 the AI scene-builder track (a Python agent, an MCP server and an in-app chat panel) and
+then the editor were removed, to keep this a pure engine; their sections below are kept as
+history. What they built for the engine stays: the World, projects and export
+(`project_export()`), the command layer with undo, the localhost command server, and the ImGui
+panels in `engine/src/UI/`.
 
-_Updated 2026-10-27._ Where things stand: the editor opens projects, edits their scenes in a Viewport
-panel, plays them in place, and exports a game a player can run (Stages 1-4 below). The renderer
+_Updated 2026-10-27._ Where things stand: `testbed/` builds a scene in code and draws it; the game
+plays a project's scenes and is what an export ships. The renderer
 work under "Engine roadmap" has phases 1-3 done; its follow-ups and phases 4-7 are saved for later.
 
 ## Next up
@@ -274,6 +276,8 @@ Next steps:
 - [x] Split the build: `PBR_Runtime` (no ImGui/Chat/Net/Commands) for the game, `PBR_Tools` on
       top of it for the editor, both from `engine/`. App reaches ImGui only through the
       `App.ui` hook table. The Release game went from 1.75 MB to 552 KB
+      (2026-10-27: merged back into one static library, `PBR_Engine`; the game still pulls in
+      only the runtime's object files, so it stays C only)
 
 ## Projects, viewport panel and game export
 

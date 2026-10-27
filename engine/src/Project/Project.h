@@ -14,7 +14,7 @@
 //   hdri/          .hdr environments, "hdri/..."
 //   textures/
 //
-// The editor opens one at a time and makes its folder the project root
+// A program opens one at a time and makes its folder the project root
 // (Core/Paths.h), so every "models/..." / "hdri/..." / scene name resolves
 // inside it; the game runtime plays one. Nothing here touches the GPU.
 //
@@ -80,7 +80,7 @@ b8 project_create(const char* directory, const char* name, char* error, size_t e
 cJSON* project_starter_scene(const project_settings* settings);
 
 // --- Recent projects ------------------------------------------------------------
-// The editor's File > Recent list, most recent first, kept in
+// A tool's recent-projects list, most recent first, kept in
 // ~/.pbr-renderer/recent_projects.json ({"projects": ["C:/Games/Racer", ...]}).
 // `file` is that path; NULL means the default one (tests pass their own).
 

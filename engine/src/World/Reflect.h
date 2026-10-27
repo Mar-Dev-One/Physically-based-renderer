@@ -6,7 +6,7 @@
 
 // A description of every component's fields -- name, type, where it lives
 // in the struct, valid range, and a one-line doc -- so code that handles
-// components generically never hard-codes them: the editor's Entities
+// components generically never hard-codes them: the Entities
 // panel (UI/EntityPanel.h), and next, JSON (de)serialization, command
 // validation and the tool schemas handed to an LLM.
 //

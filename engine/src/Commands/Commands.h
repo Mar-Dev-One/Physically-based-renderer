@@ -106,7 +106,7 @@ typedef struct command_context
     const char* scenes_dir;           // where scene.save/load/list work; NULL = the project's scenes/
 
     // Optional: when set, scene.save refuses with this message -- for a
-    // world that must never reach a file (the editor's Play copy).
+    // world that must never reach a file (a play-mode copy).
     const char* save_refused;
 
     // Optional: the scene's environment (HDRI, exposure, ...), which the app

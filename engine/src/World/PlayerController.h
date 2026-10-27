@@ -4,7 +4,7 @@
 #include "World.h"
 
 // Moves every PlayerController entity (Components.h) from the player's
-// input: the game runtime and the editor's Play call player_controller_tick()
+// input: the game runtime calls player_controller_tick()
 // once a frame, before world_tick() and world_update().
 //
 // Looking turns Transform.rotation_deg: yaw (y) by look_x, pitch (x) by

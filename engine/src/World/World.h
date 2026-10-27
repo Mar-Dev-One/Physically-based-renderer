@@ -68,7 +68,7 @@ void world_shutdown(world* w);
 // slots, generations and free list, so every entity ID names the same
 // entity in both, and the next world_create() hands out the same ID in
 // each. Shares src's asset cache and retains every model the copy uses.
-// For the editor's Play mode, which ticks a copy and throws it away.
+// For a play mode, which ticks a copy and throws it away.
 void world_copy(world* dst, const world* src);
 
 // --- Entities ---------------------------------------------------------------
@@ -145,8 +145,8 @@ void world_update(world* w);
 
 // Advances the behaviour components by `dt` seconds -- today, Spin turns
 // rotation_deg (kept within +-360). For a running game: the game runtime
-// calls it once per frame before world_update(); the editor doesn't (it
-// previews Spin only while drawing), so its scenes stay as authored.
+// calls it once per frame before world_update(); a tool that doesn't keeps
+// its scenes as authored.
 void world_tick(world* w, f32 dt);
 
 // World matrix as of the last world_update(); NULL if stale.

@@ -37,7 +37,7 @@ typedef void (*app_resize_callback)(struct App* app, uint16 width, uint16 height
 // set should_close later. Without this hook the window just closes.
 typedef b8 (*app_close_request_callback)(struct App* app);
 
-// An immediate-mode UI drawn over every frame -- the editor's Dear ImGui
+// An immediate-mode UI drawn over every frame -- e.g. Dear ImGui
 // (UI/ImGuiLayer.h imgui_layer()). The runtime only calls these, so a game
 // built without one links no UI library at all. Every function is required.
 typedef struct app_ui_layer
@@ -74,7 +74,7 @@ typedef struct App
     b8     hidden;    // a window that's never shown, for rendering offscreen only
     b8     maximized; // fills the screen but for the taskbar; width/height is the restored size
 
-    // NULL for a game runtime; the editor's is UI/ImGuiLayer.h imgui_layer().
+    // NULL for no UI; UI/ImGuiLayer.h imgui_layer() is Dear ImGui's.
     const app_ui_layer* ui;
 } App;
 

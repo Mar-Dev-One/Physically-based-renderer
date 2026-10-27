@@ -7,7 +7,7 @@
 // How a scene is lit and backed beyond its entities: the HDRI, whether it
 // lights the scene and shows as the sky, and the exposure / ambient
 // strength. Saved as a scene file's "environment" object (World/Serialize.h),
-// so the editor and the game runtime show a scene the same way.
+// so every program that loads it shows a scene the same way.
 //
 // Format (every key optional when read; omitted ones keep their value):
 //   { "hdri": "hdri/sky.hdr" | null, "use_ibl": true, "show_skybox": true,

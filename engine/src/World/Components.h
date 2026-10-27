@@ -87,8 +87,8 @@ typedef struct c_camera
 } c_camera;
 
 // Turns the entity's Transform.rotation_deg at a steady rate while the game
-// runs (world_tick()). The editor never ticks -- it only previews the turning
-// while drawing -- so what it saves is the pose as authored.
+// runs (world_tick()). A tool that doesn't tick keeps the pose as authored, so
+// that's what it saves.
 typedef struct c_spin
 {
     vec3 degrees_per_second;   // added to rotation_deg (x = pitch, y = yaw, z = roll) each second
@@ -127,7 +127,7 @@ typedef struct c_player_controller
 // takes the player to another scene: when a PlayerController entity walks
 // in, the view fades out, `scene` loads, the player is put at the entity
 // called `spawn` there (if given) and the view fades back in
-// (World/SceneTransition.h). In the game and the editor's Play.
+// (World/SceneTransition.h). In the game.
 typedef struct c_scene_trigger
 {
     vec3 extents;                  // half the box's size along x, y, z, in meters
