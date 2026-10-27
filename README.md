@@ -41,6 +41,22 @@ roughness, metallic, ao, shadow, lighting, wireframe, lights). It finds the engi
 the sample project at runtime, so it can be started from any directory, and its
 [main.c](testbed/main.c) is the shortest example of a program using the engine.
 
+## Making an SDK
+
+To use the engine from another project without CMake -- an include folder and `.lib` files, as
+with any C library -- install it into a folder, once per configuration:
+
+```sh
+cmake --build build --config Debug   && cmake --install build --config Debug   --prefix PBR_SDK
+cmake --build build --config Release && cmake --install build --config Release --prefix PBR_SDK
+```
+
+`PBR_SDK/` then holds `include/` (the engine's headers and the ones it needs from cglm, cJSON,
+GLFW, glad and cimgui), `lib/Debug/` and `lib/Release/` (`PBR_Engine.lib` with `glfw3.lib`,
+`glad.lib` and `cimgui.lib` beside it, each its own library), and `engine/shaders/`, which the
+engine loads at runtime. Its [README](engine/sdk/README.md) lists the project settings, the
+libraries to link and a minimal program.
+
 ## Using the engine
 
 A program fills in an `App` ([engine/src/App.h](engine/src/App.h)) with `on_init`, `on_frame`,

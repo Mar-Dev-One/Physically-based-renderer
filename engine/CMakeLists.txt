@@ -9,11 +9,24 @@
 # runtime code never includes a tools header (Commands/, Net/, UI/) -- App
 # reaches a UI only through the App.ui hook table (App.h). So such a program
 # stays C only, without ImGui's C++ or Winsock.
+#
+# The dependencies stay libraries of their own -- glfw3, glad and cimgui --
+# that PBR_Engine links; `cmake --install` (the end of this file) puts them
+# next to it in an SDK folder.
 
+# GLFW's own install rules would add its headers, a CMake package and a
+# pkg-config file to the SDK; ours install what the engine needs.
+set(GLFW_INSTALL     OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS  OFF CACHE BOOL "" FORCE)
 add_subdirectory(deps/glfw)
 add_subdirectory(deps/glad)
-add_subdirectory(deps/cglm)
 include(cmake/cimgui.cmake)
+
+# cglm is used header-only: the engine calls only its inline glm_*()
+# functions, never the compiled glmc_*() ones, so the library its own
+# CMakeLists builds (a DLL by default) isn't needed.
+add_library(cglm INTERFACE)
+target_include_directories(cglm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/deps/cglm/include)
 
 add_library(PBR_Engine STATIC
     # --- Runtime ---
@@ -123,3 +136,35 @@ target_compile_definitions(PBR_Engine PRIVATE
     DEV_ENGINE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}"
     DEV_PROJECT_ROOT="${CMAKE_SOURCE_DIR}/assets"
 )
+
+# --- SDK -----------------------------------------------------------------------
+# `cmake --install build --config <Config> --prefix <dir>` makes a folder
+# another project can use without CMake (sdk/README.md says how):
+#
+#   include/          the engine's headers (as in src/) and the ones they or
+#                     a program need from the dependencies: cglm, cJSON,
+#                     GLFW, glad (+ KHR), cimgui
+#   lib/<Config>/     PBR_Engine.lib, glfw3.lib, glad.lib, cimgui.lib -- one
+#                     folder per configuration: Debug and Release libraries
+#                     use different C runtimes and can't be mixed
+#   engine/shaders/   loaded at runtime: copy engine/ next to the program
+#                     (Core/Paths.h)
+#
+# Installing Debug and Release into the same prefix fills both lib/ folders.
+
+install(TARGETS PBR_Engine glfw glad cimgui
+    ARCHIVE DESTINATION lib/\${CMAKE_INSTALL_CONFIG_NAME}
+)
+
+install(DIRECTORY src/ DESTINATION include
+    FILES_MATCHING PATTERN "*.h"
+    PATTERN "RHI_GL_Internal.h" EXCLUDE   # the GL backend's own
+)
+install(DIRECTORY deps/cglm/include/cglm DESTINATION include)
+install(FILES     deps/cjson/cJSON.h DESTINATION include)
+install(DIRECTORY deps/glfw/include/GLFW DESTINATION include)
+install(DIRECTORY deps/glad/include/ DESTINATION include)
+install(FILES     deps/cimgui/cimgui.h deps/cimgui/cimgui_impl.h DESTINATION include)
+
+install(DIRECTORY shaders DESTINATION engine)
+install(FILES sdk/README.md DESTINATION .)

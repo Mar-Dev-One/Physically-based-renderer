@@ -76,3 +76,6 @@ __pycache__/
 
 # Local helper script
 commit.bat
+
+# The SDK cmake --install makes (README: Making an SDK)
+PBR_SDK/
