@@ -3,7 +3,7 @@
 // What the menus, keys and panels ask for. Everything that changes the
 // scene is a command (run_command()), so it is validated, reaches connected
 // clients and lands in the undo history like an edit from the console or
-// the agent.
+// a script.
 
 #include "Editor.h"
 
@@ -342,18 +342,11 @@ use_editor_camera(editor_state* state)
 
 // --- Play mode ----------------------------------------------------------------------
 
-// Not while a chat turn runs: its transaction is open on the edited scene,
-// and its remaining tool calls would land in the copy.
 void
 play_start(editor_state* state)
 {
     if (play_active(&state->play))
         return;
-    if (chat_busy(&state->chat))
-    {
-        console_info(&state->console, "Play: wait for the chat turn to finish (or Stop it) first.");
-        return;
-    }
 
     inspector_finish_edit(&state->inspector, &state->doc.commands);
     gizmo_finish_edit(state, &state->doc.commands);
@@ -373,8 +366,6 @@ play_stop(editor_state* state)
 
     inspector_finish_edit(&state->inspector, &state->play.commands);
     gizmo_finish_edit(state, &state->play.commands);
-    if (chat_busy(&state->chat) && state->chat.turn_ctx == &state->play.commands)
-        chat_stop(&state->chat);   // a turn started while playing; its world is going away
 
     play_release_control();
     play_end(&state->play, &state->doc);   // the IBL re-bakes if Play changed the HDRI
@@ -537,11 +528,6 @@ open_project(editor_state* state, const char* directory)
     project_settings settings;
     if (!project_read(directory, &settings, state->popup_error, sizeof(state->popup_error)))
         return false;
-    if (chat_busy(&state->chat))
-    {
-        snprintf(state->popup_error, sizeof(state->popup_error), "Wait for the chat turn to finish (or Stop it) first.");
-        return false;
-    }
 
     // Everything of the old project goes before anything of the new one
     // loads: the asset cache is keyed by project-relative path, so a model
@@ -562,7 +548,6 @@ open_project(editor_state* state, const char* directory)
     char line[PROJECT_PATH_MAX + PROJECT_NAME_MAX + 32];
     snprintf(line, sizeof(line), "Opened project %s (%s)", settings.name, paths_project_root());
     console_info(&state->console, line);
-    chat_info(&state->chat, line);
 
     if (!open_scene(state, settings.startup_scene))
         new_scene(state);
@@ -595,12 +580,6 @@ request(editor_state* state, pending_action action, const char* arg)
     // Each of these replaces the edited scene (or quits): Play's copy goes
     // first, so "unsaved changes" means the edited scene's.
     play_stop(state);
-
-    if ((action == ACTION_NEW_SCENE || action == ACTION_OPEN_SCENE) && chat_busy(&state->chat))
-    {
-        console_info(&state->console, "Wait for the chat turn to finish (or Stop it) before opening another scene.");
-        return;
-    }
     if (!doc_dirty(&state->doc))
     {
         perform(state, action, arg);

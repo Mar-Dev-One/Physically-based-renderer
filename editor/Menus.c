@@ -206,7 +206,6 @@ draw_view_menu(editor_state* state)
     igMenuItem_BoolPtr(WINDOW_ASSETS, NULL, &show->assets, true);
     igMenuItem_BoolPtr(WINDOW_HISTORY, NULL, &show->history, true);
     igMenuItem_BoolPtr("Console", "F1", &show->console, true);
-    igMenuItem_BoolPtr(WINDOW_CHAT, NULL, &show->chat, true);
     igMenuItem_BoolPtr(WINDOW_LOG, NULL, &show->log, true);
     igMenuItem_BoolPtr(WINDOW_TIMINGS, NULL, &show->gpu_timings, true);
     igSeparator();
@@ -268,7 +267,7 @@ static void
 draw_play_menu(editor_state* state)
 {
     b8 playing = play_active(&state->play);
-    if (igMenuItem_Bool(playing ? "Stop" : "Play", "Ctrl+P", false, playing || !chat_busy(&state->chat)))
+    if (igMenuItem_Bool(playing ? "Stop" : "Play", "Ctrl+P", false, true))
     {
         if (playing)
             play_stop(state);
@@ -333,7 +332,7 @@ draw_main_menu(editor_state* state)
 // --- Status bar --------------------------------------------------------------------------
 
 // Along the main window's bottom: the scene, Play, the selection, the
-// command server and agent, and the frame rate.
+// command server, and the frame rate.
 void
 draw_status_bar(editor_state* state)
 {
@@ -370,11 +369,6 @@ draw_status_bar(editor_state* state)
         else
             igTextColored(COLOR_WARNING, "No command server");
         igSameLine(0.0f, 20.0f);
-        if (chat_busy(&state->chat))
-        {
-            igTextColored(COLOR_OK, "Agent working...");
-            igSameLine(0.0f, 20.0f);
-        }
 
         igTextDisabled("%.1f ms (%.0f fps)", (double)state->cpu_frame_ms,
                        state->cpu_frame_ms > 0.0f ? 1000.0 / (double)state->cpu_frame_ms : 0.0);

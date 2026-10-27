@@ -2,8 +2,8 @@
 //
 // The editor: opens a project (Project/Project.h) and edits one of its
 // scenes at a time, with the outliner and inspector, the gizmo, the command
-// console, the command server other processes (MCP server, AI agent,
-// scripts) drive it through, and the in-app chat. The game runtime -- the
+// console, and the command server other processes (scripts, tools)
+// drive it through. The game runtime -- the
 // same engine with none of this -- is game/main.c. Editor.h says which file
 // holds which part.
 //
@@ -11,7 +11,7 @@
 // models/ and hdri/ (and a starter scene); File > Open Project / Recent
 // switches to another. The open project is the project root (Core/Paths.h):
 // every "models/..." and "hdri/..." in a scene, every scene.save / scene.load
-// / assets.list -- the agent's too -- works inside it. Without --project the
+// / assets.list -- a script's too -- works inside it. Without --project the
 // editor opens the sample project, the source tree's assets/.
 //
 // Scenes: File > New Scene / Open Scene / Save (Ctrl+S) / Save As. The
@@ -56,7 +56,7 @@ build_render_settings(const editor_state* state)
 
 // The panels' first-run arrangement, when the dockspace has never been
 // split (no imgui.ini yet): Scene and Renderer on the left, Entities over the
-// Inspector on the right, Console, Chat, Assets and History along the
+// Inspector on the right, Console, Assets and History along the
 // bottom, the Viewport in the middle. After that, ImGui remembers whatever
 // the user makes of it.
 static void
@@ -81,7 +81,6 @@ default_layout(ImGuiID dockspace)
     igDockBuilderDockWindow(WINDOW_ENTITIES, right);
     igDockBuilderDockWindow(WINDOW_INSPECTOR, right_bottom);
     igDockBuilderDockWindow(WINDOW_CONSOLE, bottom);
-    igDockBuilderDockWindow(WINDOW_CHAT, bottom);
     igDockBuilderDockWindow(WINDOW_ASSETS, bottom);
     igDockBuilderDockWindow(WINDOW_HISTORY, bottom);
     igDockBuilderDockWindow(WINDOW_LOG, bottom);
@@ -128,7 +127,7 @@ on_init(App* app)
                                                       .triggers = true };
     state->show                 = (panel_visibility){ .scene = true, .entities = true, .inspector = true,
                                                       .renderer = true, .assets = true, .history = true,
-                                                      .console = true, .chat = true };
+                                                      .console = true };
 
     state->gizmo_op    = GIZMO_TRANSLATE;
     state->gizmo_space = GIZMO_WORLD;
@@ -138,12 +137,9 @@ on_init(App* app)
     state->add_size    = 1.0f;
 
     state->server = server_start(NULL);
-    chat_init(&state->chat, state->server);
-    chat_panel_init(&state->chat_panel);
 
-    uint32                  host_command_count, chat_command_count;
+    uint32                  host_command_count;
     const cmd_host_command* host_command_table = editor_host_commands(&host_command_count);
-    const cmd_host_command* chat_command_table = chat_commands(&chat_command_count);
 
     doc_init(&state->doc, &state->assets, (command_context){
         .on_change            = on_world_change,
@@ -152,9 +148,6 @@ on_init(App* app)
         .host_commands        = host_command_table,
         .host_command_count   = host_command_count,
         .host_user            = state,
-        .module_commands      = chat_command_table,
-        .module_command_count = chat_command_count,
-        .module_user          = &state->chat,
     });
 
     if (state->server)
@@ -167,22 +160,6 @@ on_init(App* app)
     {
         console_info(&state->console, "Command server could not start; only this console can run commands.");
     }
-
-#ifdef _WIN32
-    const char* home = getenv("USERPROFILE");
-#else
-    const char* home = getenv("HOME");
-#endif
-    snprintf(state->agent_log, sizeof(state->agent_log), "%s/.pbr-renderer/agent.log", home ? home : ".");
-
-    // The chat agent connects through the server, so without one there's no agent.
-    const char* autostart = getenv("PBR_AGENT_AUTOSTART");
-    if (!state->server)
-        snprintf(state->agent_note, sizeof(state->agent_note), "The command server didn't start, so no agent can connect.");
-    else if (autostart && strcmp(autostart, "0") == 0)
-        snprintf(state->agent_note, sizeof(state->agent_note), "Not started automatically (PBR_AGENT_AUTOSTART=0).");
-    else
-        start_agent(state);
 
     f32 aspect = (f32)framebuffer_size.width / (f32)framebuffer_size.height;
     camera_init(&state->cam, (vec3){ 4.0f, 3.0f, 6.0f }, (vec3){ 0.0f, 0.0f, 0.0f }, 45.0f, aspect, 0.1f, 500.0f);
@@ -329,11 +306,6 @@ draw_engine_panels(editor_state* state)
         dock_beside(WINDOW_CONSOLE);
         log_panel_draw(&state->log, WINDOW_LOG, &state->show.log);
     }
-
-    if (state->show.chat
-        && chat_panel_draw(&state->chat_panel, &state->chat, active, WINDOW_CHAT, state->agent_note) == CHAT_PANEL_START_AGENT
-        && state->server)
-        start_agent(state);
 }
 
 static void
@@ -354,9 +326,7 @@ on_frame(App* app, f32 dt)
     // Requests from other processes -- before rendering, so their changes
     // show this same frame.
     server_poll(state->server, active_commands(state));
-    chat_poll(&state->chat);
-    doc_follow_history(&state->doc);   // an agent's or the console's undo may have gone back past a load
-    watch_agent(state);
+    doc_follow_history(&state->doc);   // a script's or the console's undo may have gone back past a load
     watch_export_check(state);
 
     gizmo_begin_frame();
@@ -406,9 +376,7 @@ on_shutdown(App* app)
     editor_state* state = (editor_state*)app->user_data;
 
     play_stop(state);                        // the copy holds asset references too
-    chat_shutdown(&state->chat);             // closes a running turn's transaction
-    server_stop(state->server);              // the agent (--exit-with-app) leaves when its connection closes...
-    process_destroy(state->agent_process);   // ...or is ended here
+    server_stop(state->server);
     finish_edits(state);                     // an edit still open becomes its own step
     inspector_shutdown(&state->inspector);
     console_shutdown(&state->console);
@@ -463,7 +431,7 @@ main(int argc, char** argv)
         .name             = "PBR Editor",
         // Maximized: a fixed 1920 x 1080 window on a 1920 x 1080 screen ran
         // under the taskbar, hiding the bottom of every docked panel -- where
-        // the Console's and the Chat's input boxes are. The size is what
+        // the Console's input box is. The size is what
         // un-maximizing restores to.
         .maximized        = true,
         .width            = 1600,

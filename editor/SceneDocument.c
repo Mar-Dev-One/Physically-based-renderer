@@ -65,7 +65,7 @@ doc_scene_file(scene_document* doc, cmd_scene_file_op op, const char* name)
         doc->load_undone  = false;
 
         // Outside a transaction its step was just recorded: the newest. In
-        // one (a chat turn), doc_follow_history() finds it after the commit.
+        // one (a transaction), doc_follow_history() finds it after the commit.
         const command_history* h = &doc->history;
         doc->load_step = !history_in_transaction(h) && h->cursor ? h->steps[h->cursor - 1].changes : NULL;
     }
@@ -89,7 +89,7 @@ doc_follow_history(scene_document* doc)
         return;
 
     // The load's step: the newest one, the first time we look after the
-    // load (a chat turn's load is recorded when the turn commits).
+    // load (one inside a transaction is recorded when it commits).
     if (!doc->load_step)
     {
         if (h->cursor == 0)

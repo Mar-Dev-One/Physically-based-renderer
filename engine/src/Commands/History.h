@@ -9,8 +9,8 @@
 //
 // Steps are recorded by the command layer (Commands.h): one per mutating
 // command, or one per transaction -- history_begin() ... history_commit()
-// groups any number of commands into a single step (one chat turn, one
-// batch). Recording a new step discards anything that could be redone.
+// groups any number of commands into a single step (one batch, one
+// drag). Recording a new step discards anything that could be redone.
 //
 // Models referenced by recorded states are retained for as long as the
 // step is in the history, so undoing back to a model that nothing else uses

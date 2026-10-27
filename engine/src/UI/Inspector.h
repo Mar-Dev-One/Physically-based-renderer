@@ -12,7 +12,7 @@
 //
 // Every edit runs as a command through the given context (component.set,
 // entity.update, component.remove, entity.destroy), exactly as the console or
-// the agent would: it is validated, undoable, and reported as a change. A
+// a script would: it is validated, undoable, and reported as a change. A
 // drag (or any continuous edit) is one undo step: the first change opens a
 // history group, which is committed once no widget is active any more. A
 // rejected value is shown in the window and changes nothing.

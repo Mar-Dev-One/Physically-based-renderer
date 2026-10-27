@@ -803,8 +803,7 @@ draw_toolbar(editor_state* state)
 
     if (!playing)
     {
-        b8 busy = chat_busy(&state->chat);
-        if (toolbar_button("Play", !busy, busy ? "A chat turn is running" : "Run the scene here (Ctrl+P)"))
+        if (toolbar_button("Play", true, "Run the scene here (Ctrl+P)"))
             play_start(state);
     }
     else if (toolbar_button("Stop", true, "Back to the edited scene; changes made while playing are dropped (Ctrl+P)"))

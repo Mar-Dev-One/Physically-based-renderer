@@ -1,11 +1,11 @@
 # Roadmap
 
-Two tracks: the **AI scene builder** (describe a scene in chat, from Claude Desktop/Code or from a
-chat panel inside the app, and have it built) and the **renderer/editor features** around it.
-The AI track drives the order; renderer features slot in where they help it.
+The **renderer, editor and game runtime**. An earlier AI scene-builder track (a Python agent, an
+MCP server and an in-app chat panel) was removed on 2026-10-27 to keep this a pure engine; its
+section below is kept as history. What it built for the engine stays: the World, the command layer
+with undo, and the localhost command server, which any external tool can still drive.
 
-_Updated 2026-10-18._ Where things stand: the AI scene builder (Phases 1-5) works from Claude
-Desktop/Code and from the in-app chat. The editor opens projects, edits their scenes in a Viewport
+_Updated 2026-10-27._ Where things stand: the editor opens projects, edits their scenes in a Viewport
 panel, plays them in place, and exports a game a player can run (Stages 1-4 below). The renderer
 work under "Engine roadmap" has phases 1-3 done; its follow-ups and phases 4-7 are saved for later.
 
@@ -61,7 +61,10 @@ building the export.
 
 ---
 
-## AI scene builder
+## AI scene builder (removed 2026-10-27)
+
+_History only: `agent/`, `Chat/` and the chat panel are gone. Phases 1-3 (World, commands,
+command server) are still the engine's core._
 
 ### Architecture
 
@@ -499,12 +502,6 @@ scene builder, phases 4-5 are the engine work and phase 6 can wait.
 - [ ] Frustum culling (from `Bounds`)
 - [ ] Instancing for repeated assets
 - [ ] Transparency sorting across all entities, not just within one model
-- [ ] AI: selection and camera context sent automatically to the in-app agent (picking now
-      exists, so "make *this* red" just needs the selection passed along)
-- [ ] AI: lighting presets `set_lighting_mood("sunset")` (sun, color, HDRI, exposure)
-- [ ] AI: scene templates (studio, outdoor daylight, product shot)
-- [ ] AI: camera shots (close-up, wide, rule-of-thirds framing)
-- [ ] AI: per-turn diff summary, shown in the chat panel and fed back to the model
 - [x] Hot reload for every shader, not just `pbr.*` (`Renderer/ShaderReload.h`): tone mapping and
       shadow depth rebuild in place; an IBL bake or skybox shader re-bakes the environment
 - [x] In-app log window (shader errors visible in the UI): View > Log, opens by itself on an
@@ -554,4 +551,3 @@ scene builder, phases 4-5 are the engine work and phase 6 can wait.
       LightBlock and ShadowBlock, std140 copies in `Renderer/FrameData.h` checked by static
       asserts; `rhi_uniform_buffer_create()` / `rhi_uniform_buffer_bind()`
 - [ ] RenderDoc capture hotkey
-- [ ] AI: `generate_asset(prompt)` behind the catalog interface

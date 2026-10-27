@@ -71,7 +71,7 @@ input_binding input_binding_key_pair(input_key negative, input_key positive, f32
 input_binding input_binding_pad_axis(input_pad_axis axis, f32 scale);
 input_binding input_binding_mouse_motion(int axis, f32 scale);
 
-// As text, the way project.json, the editor and the agent write it:
+// As text, the way project.json, the editor and scripts write it:
 //   key:w   keys:a/d   mouse:right   pad:a   pad_axis:left_y   mouse_motion:x
 // with "*<scale>" after it when the scale isn't 1 ("pad_axis:left_y*-1").
 // Names are Platform/Input.h's (input_key_name() etc.); case doesn't matter.

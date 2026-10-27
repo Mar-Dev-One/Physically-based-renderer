@@ -3,8 +3,8 @@
 #include "../Core/Defines.h"
 #include "../Commands/Commands.h"
 
-// A localhost WebSocket server that lets other processes -- the MCP server,
-// the in-app agent, a script -- run commands (Commands/Commands.h) in the
+// A localhost WebSocket server that lets other processes -- a script, a
+// tool -- run commands (Commands/Commands.h) in the
 // running app, speaking JSON-RPC 2.0 (Commands/JsonRpc.h).
 //
 //   ws://127.0.0.1:<port>/?token=<token>
@@ -60,11 +60,11 @@ void server_on_change(void* server, const cJSON* event);
 // Roles: a client can say who it is, and claim a role, with the server's own
 // method (answered by the server, never run as a command):
 //   -> {"jsonrpc": "2.0", "id": 1, "method": "server.hello",
-//       "params": {"client": "pbr-agent", "role": "chat_agent"}}
-//   <- {"jsonrpc": "2.0", "id": 1, "result": {"server": "pbr-renderer", "role": "chat_agent"}}
+//       "params": {"client": "my-tool", "role": "importer"}}
+//   <- {"jsonrpc": "2.0", "id": 1, "result": {"server": "pbr-renderer", "role": "importer"}}
 // A role is held by one connection at a time (a second claim fails with
 // data.code "conflict") and is released when that connection closes, or
-// with "role": null. The app finds its chat agent this way (Chat/ChatSession.h).
+// with "role": null. The app can find a particular client this way.
 #define SERVER_HELLO_METHOD "server.hello"
 #define SERVER_ROLE_MAX     32
 

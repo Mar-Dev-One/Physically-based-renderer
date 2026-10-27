@@ -13,7 +13,7 @@
 //   help / help <command> / clear
 // Up/Down recall earlier input; Tab completes command names.
 //
-// Change events from other sources (a command server, an agent) are shown
+// Change events from other sources (a command server, a script) are shown
 // too, if console_on_change is installed as the context's on_change.
 
 #define CONSOLE_MAX_ENTRIES 400

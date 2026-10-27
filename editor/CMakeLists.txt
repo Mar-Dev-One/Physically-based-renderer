@@ -1,14 +1,10 @@
-# The editor: the scene panels, command console, chat with the AI agent and
-# the command server -- engine/'s PBR_Tools, on top of the PBR_Runtime the
+# The editor: the scene panels, command console and the command server -- engine/'s PBR_Tools, on top of the PBR_Runtime the
 # game (game/) uses. It's the only app with a UI layer (App.ui = imgui_layer()).
 # Editor.h says which file holds which part.
-add_executable(Editor main.c Actions.c Agent.c Export.c HostCommands.c Menus.c Panels.c Viewport.c
+add_executable(Editor main.c Actions.c Export.c HostCommands.c Menus.c Panels.c Viewport.c
                       SceneDocument.c PlaySession.c)
 
 target_link_libraries(Editor PRIVATE PBR_Tools)
-
-# The chat agent's Python environment lives in the source tree (agent/README.md).
-target_compile_definitions(Editor PRIVATE AGENT_DIR="${CMAKE_SOURCE_DIR}/agent")
 
 # Export (Project/Project.h project_export()) ships the Game executable.
 # Players need a non-Debug build. A non-Debug editor ships its own

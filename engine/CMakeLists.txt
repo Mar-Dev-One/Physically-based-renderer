@@ -4,8 +4,7 @@
 #                renderer, models and assets, the World and its scene files,
 #                project settings. No UI library, no sockets. game/ links it.
 #   PBR_Tools    what the editor adds on top: the command layer (and its undo
-#                history), the command server, the chat session and the
-#                Dear ImGui panels. editor/ links it (and through it, the
+#                history), the command server and the Dear ImGui panels. editor/ links it (and through it, the
 #                runtime).
 #
 # Runtime code never includes a Tools header: App reaches the editor's UI only
@@ -114,13 +113,11 @@ add_library(PBR_Tools STATIC
     src/Commands/History.c
     src/Commands/JsonRpc.c
     src/Net/CommandServer.c
-    src/Chat/ChatSession.c
     src/UI/ImGuiLayer.c
     src/UI/EntityPanel.c
     src/UI/Inspector.c
     src/UI/GizmoBridge.cpp
     src/UI/CommandConsole.c
-    src/UI/ChatPanel.c
     src/UI/LogPanel.c
 )
 

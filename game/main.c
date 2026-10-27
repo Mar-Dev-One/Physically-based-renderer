@@ -2,7 +2,7 @@
 //
 // The game runtime: loads a scene file (scenes/<name>.json in the project,
 // as saved by the editor) and plays it. No ImGui, no command console, no
-// command server, no chat -- those are editor-only (editor/main.c). An
+// command server -- those are editor-only (editor/main.c). An
 // export ships this program, renamed after the project.
 //
 //   Game [options] [scene] [hdri]

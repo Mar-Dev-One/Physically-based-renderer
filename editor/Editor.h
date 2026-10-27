@@ -15,15 +15,13 @@
 //                   GPU timings
 //   Menus.c         the main menu, the status bar and every dialog
 //   Export.c        Export: project_export() and the exported game's check
-//   Agent.c         the chat agent's Python sidecar
 //
 // Everything that changes the scene runs as a command (Commands/Commands.h)
-// through active_commands(), so the console, the agent, the panels and the
+// through active_commands(), so the console, scripts, the panels and the
 // gizmo all go through the same validated, undoable path.
 
 #include "App.h"
 #include "Assets/AssetCache.h"
-#include "Chat/ChatSession.h"
 #include "Core/Defines.h"
 #include "Core/Process.h"
 #include "Net/CommandServer.h"
@@ -33,7 +31,6 @@
 #include "Renderer/SceneRenderer.h"
 #include "Scene/Camera.h"
 #include "Scene/OrbitCamera.h"
-#include "UI/ChatPanel.h"
 #include "UI/CommandConsole.h"
 #include "UI/EntityPanel.h"
 #include "UI/Gizmo.h"
@@ -97,7 +94,6 @@ typedef struct panel_visibility
     b8 assets;
     b8 history;
     b8 console;      // F1
-    b8 chat;
     b8 log;          // opens by itself when an error is logged
     b8 gpu_timings;
 } panel_visibility;
@@ -121,7 +117,7 @@ typedef struct editor_state
     // --- Play mode (PlaySession.h, the Viewport toolbar) ---------------------------
     // While it plays, everything that shows or edits "the scene on screen" --
     // the view, selection, gizmo, Inspector, Entities, console, command
-    // server, agent, Add -- works on the copy (active_commands()). Saving and
+    // server, Add -- works on the copy (active_commands()). Saving and
     // opening act on the edited scene, so they stop play or wait.
     play_session play;
 
@@ -133,21 +129,10 @@ typedef struct editor_state
     log_panel        log;            // the engine's log, from main() on (UI/LogPanel.h)
     f32              cpu_frame_ms;   // smoothed, for the GPU timings window and the status bar
 
-    // Lets other processes (the MCP server, an agent, scripts) run the same
+    // Lets other processes (scripts, tools) run the same
     // commands over a localhost WebSocket; see Net/CommandServer.h. NULL if
     // it couldn't start -- the app works without it.
     command_server* server;
-
-    // --- Chat (Chat/ChatSession.h) -------------------------------------------------
-    // The in-app chat with the AI agent. The agent is a Python sidecar
-    // (agent/pbr_agent/agent.py) that the app starts at launch and that
-    // connects back through the command server; agent_note says why it isn't
-    // there when it isn't. Any agent that connects works, not only ours.
-    chat_session chat;
-    chat_panel   chat_panel;
-    process*     agent_process;
-    char         agent_note[1280];
-    char         agent_log[1024];
 
     // --- Rendering -------------------------------------------------------------
     // Renderer/SceneRenderer.h runs the whole lit frame; build_render_settings()
@@ -281,7 +266,6 @@ typedef struct editor_state
 #define WINDOW_ASSETS    "Assets"
 #define WINDOW_HISTORY   "History"
 #define WINDOW_CONSOLE   "Console (F1)"
-#define WINDOW_CHAT      "Chat"
 #define WINDOW_LOG       "Log"
 #define WINDOW_TIMINGS   "GPU timings"
 #define WINDOW_VIEWPORT  "Viewport"
@@ -454,8 +438,3 @@ const char* game_executable(b8* out_release, b8* out_stale);
 // Shows `folder` in the system's file browser.
 void open_folder(const char* folder);
 
-// --- Agent.c ---------------------------------------------------------------------
-
-void start_agent(editor_state* state);
-// Notices the sidecar exiting, and says where to look.
-void watch_agent(editor_state* state);

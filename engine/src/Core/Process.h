@@ -2,8 +2,8 @@
 
 #include "Defines.h"
 
-// Starting and watching a child process -- the app's Python sidecars (the
-// chat agent, agent/pbr_agent/agent.py). No pipes: the child's stdout and
+// Starting and watching a child process -- the editor's export check, the
+// golden tests' renders. No pipes: the child's stdout and
 // stderr go to a log file.
 
 typedef struct process process;

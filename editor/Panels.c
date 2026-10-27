@@ -1,6 +1,6 @@
 // editor/Panels.c
 //
-// The editor's own panels (the Entities, Inspector, Console, Chat and Log
+// The editor's own panels (the Entities, Inspector, Console and Log
 // windows are engine/src/UI's):
 //
 //   Scene        the project and scene, Add, and the scene's environment
@@ -391,7 +391,7 @@ draw_history_panel(editor_state* state)
     if (play_active(&state->play))
         igTextColored(COLOR_WARNING, "Playing: no undo. Stop drops everything Play changed.");
     else if (history_in_transaction(h))
-        igTextColored(COLOR_WARNING, "Recording \"%s\" (a chat turn or a drag)...", h->label);
+        igTextColored(COLOR_WARNING, "Recording \"%s\" (a batch or a drag)...", h->label);
 
     igBeginDisabled(play_active(&state->play) || history_in_transaction(h));
     if (igButton("Undo", (ImVec2_c){ 0, 0 }))

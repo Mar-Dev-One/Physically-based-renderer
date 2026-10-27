@@ -20,7 +20,7 @@
 // redraw everything near them, every frame. So each map is two layers: the
 // static casters, kept in a second atlas and redrawn only when they change,
 // and the moving ones, drawn each frame on top of a copy of that layer.
-// Everything else that changes (a gizmo drag, an agent's edit) just redraws
+// Everything else that changes (a gizmo drag, a console edit) just redraws
 // the static layer when it happens.
 
 // Which casters.

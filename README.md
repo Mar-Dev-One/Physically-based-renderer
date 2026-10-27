@@ -1,7 +1,7 @@
-# AI Powered PBR-Renderer
+# PBR-Renderer
 
-A physically based renderer in C11 and OpenGL 4.6, with an AI scene builder: describe a scene in
-Claude Desktop or Claude Code and watch it get built in the running app.
+A physically based renderer and game engine in C11 and OpenGL 4.6, with an editor and a game
+runtime.
 
 - **Rendering**: Cook-Torrance GGX metallic-roughness shading, image-based lighting from HDRIs
   (multi-scatter, specular occlusion), cascaded shadow maps with filtered soft shadows, HDR
@@ -9,12 +9,10 @@ Claude Desktop or Claude Code and watch it get built in the running app.
 - **Scene**: an entity-component world with generational handles, reflected components, a
   reference-counted asset cache, and JSON scene files.
 - **Commands**: every scene change goes through one JSON command API, with validation, clear
-  errors, and undo/redo grouped into transactions. The in-app console, the GUI and AI clients all
-  use it.
+  errors, and undo/redo grouped into transactions. The in-app console, the GUI and remote clients
+  all use it.
 - **Remote control**: a localhost WebSocket server speaking JSON-RPC 2.0, with change
   notifications and offscreen screenshots.
-- **AI**: a Python package (`pbr_agent`) with an async engine client, 34 tool definitions, an
-  MCP server so any MCP client can build scenes, and an in-app chat panel backed by a Claude agent.
 
 The project is a work in progress; see [docs/ROADMAP.md](docs/ROADMAP.md) for what's done and
 what's next.
@@ -38,7 +36,7 @@ This builds two apps on the same engine library. Both find their files at runtim
 shaders, and a project folder), so they can be started from any directory.
 
 - **Editor** (`build/editor/Release/Editor.exe` with Visual Studio): the projects, panels, Viewport,
-  command console, command server and in-app chat described below.
+  command console and command server described below.
 - **Game** (`build/game/Release/Game.exe`): the game runtime, what an export ships. It plays a
   project's scene with no UI, console or command server:
   `Game [--width N] [--height N] [--fullscreen] [--project DIR] [--check PNG] [scene] [hdri]`, where
@@ -110,7 +108,7 @@ each one back on. The first time, they're arranged around the Viewport:
   one), **Import...**, and the models in memory with their reference counts, triangles and
   materials; **Unload unused** frees the ones nothing uses.
 - **History**: every undo step, newest last; click one to go back (or forward) to it.
-- **Console** (F1), **Chat**, **Log** (opens by itself on an error) and **GPU timings**.
+- **Console** (F1), **Log** (opens by itself on an error) and **GPU timings**.
 
 The status bar along the bottom shows the scene (`*` when unsaved), whether it's playing, the
 selection, the command server and its clients, and the frame time.
@@ -130,7 +128,7 @@ holds Play / Pause / Step, the gizmo's mode, space and snapping; then the camera
 
 **Play:** **Play** (Ctrl+P) runs a copy of the scene in the Viewport — Spin components turn — with
 a green border (amber while paused; Ctrl+Shift+P pauses, F10 steps one frame). While playing
-you can still select, inspect and move things, and the agent works on the copy too; **Stop**
+you can still select, inspect and move things, and remote clients work on the copy too; **Stop**
 throws the copy away, environment changes included, and the edited scene is exactly as it was.
 There's no undo while playing, and saving waits until you stop.
 
@@ -146,7 +144,7 @@ component...** adds a MeshRenderer, Light, Camera, Spin, ReflectionProbe, Player
 component's header removes it; **Delete** removes the entity. **Edit** (and the shortcuts below)
 also undoes and redoes (naming the step), duplicates the selection with its children beside it
 (**Ctrl+D**), deletes it (**Delete**), unparents it and selects its parent. Every edit runs as a
-command, exactly like the console or the agent: it is validated (a rejected value shows in red
+command, exactly like the console or a script: it is validated (a rejected value shows in red
 and changes nothing), reaches connected clients, and is undoable — a whole drag, a duplicate or a
 reparent is one step.
 
@@ -170,7 +168,6 @@ shortcuts lists them):
 | Ctrl+S | Save the scene |
 | Ctrl+P / Ctrl+Shift+P / F10 | Play or stop / pause or resume / step one frame |
 | F1 | Command console |
-| Chat window | Ask the AI agent to build or change the scene |
 | Esc | Clear the selection, or quit |
 
 ### Command console
@@ -188,48 +185,20 @@ camera and environment. Whatever the panels can set, a command can too: `view.lo
 the camera, `render.set` the render settings (shadows and cascade splits included), `render.stats`
 reports what the last frame drew, `render.reload_shaders` rebuilds the shaders, and `play.set`
 takes `game_camera`. `scene.describe` shows the current world. Saved scenes live in
-[assets/scenes/](assets/scenes/); two example scenes built by an AI are included. A saved scene
+[assets/scenes/](assets/scenes/); two example scenes are included. A saved scene
 holds the entities and the environment (HDRI, IBL and skybox switches, sky blur, exposure, ambient
 strength); loading it with `replace` restores both, while merging into the current scene adds the
 entities only.
 
-## Building scenes with Claude
+## Remote control
 
 When the editor starts, it opens a command server on `127.0.0.1` and writes how to reach it
-(port and token) to `~/.pbr-renderer/server.json`. The `pbr-mcp` server in [agent/](agent/)
-connects to it and exposes the scene tools over MCP.
-
-```sh
-python -m venv agent/.venv
-agent/.venv/Scripts/python -m pip install -e agent      # Windows
-agent/.venv/bin/python -m pip install -e agent          # macOS / Linux
-
-claude mcp add pbr-renderer -- /path/to/PBR-Renderer/agent/.venv/Scripts/pbr-mcp.exe
-```
-
-Then start the editor and ask for something like *"put a table in the middle with a lamp on it,
-light it warmly and show me"*. Claude can inspect the scene, place and edit entities, set lights,
-camera and environment, take screenshots, and save scenes.
-
-See [agent/README.md](agent/README.md) for Claude Desktop setup and for using the engine client
-from your own Python code.
-
-### In-app chat
-
-The editor's **Chat** window talks to the same tools without leaving the app. At launch the
-editor starts the agent (`python -m pbr_agent.agent` from `agent/.venv`), which connects back
-through the command server. Set `ANTHROPIC_API_KEY` in the environment the editor starts from
-(or run `ant auth login`); without credentials the panel says so.
-
-Replies stream in, each tool call shows as a line you can expand, and **Stop** ends a turn early.
-Each request is one undo step: **Undo turn** (or the console's Undo) reverts everything the agent
-did for it. Changes made from Claude Desktop or Claude Code show up live in the app, and the chat's
-changes show up for them.
-
-`PBR_AGENT_PYTHON` points at a different Python, `PBR_AGENT_AUTOSTART=0` turns the automatic start
-off (the panel has a **Start agent** button), and `PBR_AGENT_MODEL` / `PBR_AGENT_EFFORT` pick the
-model and effort (default `claude-opus-5-5`, `medium`). The agent logs to
-`~/.pbr-renderer/agent.log`.
+(port and token) to `~/.pbr-renderer/server.json`. Any WebSocket client can connect to
+`ws://127.0.0.1:<port>/?token=<token>` and send the same commands as the console, as JSON-RPC 2.0;
+every change is pushed back to connected clients as a `scene.changed` notification, and
+`view.screenshot` returns an offscreen render as a PNG. See
+[engine/src/Net/CommandServer.h](engine/src/Net/CommandServer.h) and
+[tests/server_test.py](tests/server_test.py) for a stdlib-only Python client.
 
 ## Models
 
@@ -262,13 +231,11 @@ engine/src/
   Assets/          shared, reference-counted asset cache
   Commands/        command API, undo/redo history, JSON-RPC
   Net/             localhost WebSocket command server
-  Chat/            in-app chat session (turns, undo per turn, agent connection)
-  UI/              ImGui layer, entity panel, command console, chat panel
-editor/            the editor app (ImGui panels, console, command server, chat)
+  UI/              ImGui layer, entity panel, inspector, command console, log
+editor/            the editor app (ImGui panels, console, command server)
 engine/shaders/    the engine's GLSL shaders
 game/              the game runtime (plays a project's scene; no editor UI) -- what an export ships
 assets/            the default project: models, HDRIs, textures, scenes
-agent/             pbr_agent Python package: MCP server and in-app chat agent
 tests/             headless C tests and end-to-end server tests
 docs/              roadmap
 ```
@@ -282,8 +249,7 @@ ctest --test-dir build -C Release -LE gpu      # without the GPU test, e.g. on a
 
 The C tests are headless (no window or GL context), so they run anywhere. They cover the world,
 serialization, commands, undo history, placement, JSON-RPC and encoding. With Python 3 on the
-path, ctest also runs an end-to-end test of the WebSocket server, and, when `agent/.venv` exists,
-the `pbr_agent` test suite.
+path, ctest also runs an end-to-end test of the WebSocket server.
 
 `GoldenTests` (label `gpu`) renders the reference scenes in `tests/golden/scenes/` with the game's
 `--check` and compares them with the saved pictures in `tests/golden/`. A failure leaves the render
@@ -303,10 +269,7 @@ The saved pictures come from one GPU; on another, small rounding differences may
 [cglm](https://github.com/recp/cglm), [Dear ImGui](https://github.com/ocornut/imgui) via
 [cimgui](https://github.com/cimgui/cimgui), [stb_image / stb_image_write](https://github.com/nothings/stb),
 [cgltf](https://github.com/jkuhlmann/cgltf), [fast_obj](https://github.com/thisistherk/fast_obj),
-[cJSON](https://github.com/DaveGamble/cJSON). Python side: the
-[MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk),
-[websockets](https://github.com/python-websockets/websockets) and the
-[Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python).
+[cJSON](https://github.com/DaveGamble/cJSON).
 
 ## License
 

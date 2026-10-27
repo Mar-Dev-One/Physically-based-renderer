@@ -2,8 +2,7 @@
 //
 // Commands for state the World doesn't hold -- the camera, the HDRI, the
 // renderer settings, the log, Play, the project and Export -- registered with
-// the command context, so the console (and the agent, and scripts over the
-// command server) can drive them like any built-in command. Each mirrors a
+// the command context, so the console (and scripts over the command server) can drive them like any built-in command. Each mirrors a
 // panel or a toolbar control: whatever the GUI can set, a command can too.
 
 #include "Editor.h"
@@ -696,8 +695,7 @@ host_project_info(void* user_data, command_context* ctx, const cJSON* args, cJSO
     return true;
 }
 
-// Creates a project; the user opens it (switching projects mid-turn would
-// pull the scene out from under the agent).
+// Creates a project; the user opens it.
 static b8
 host_project_create(void* user_data, command_context* ctx, const cJSON* args, cJSON** out_result, char* error, size_t error_size)
 {
@@ -745,7 +743,7 @@ host_export_status(void* user_data, command_context* ctx, const cJSON* args, cJS
     return true;
 }
 
-// The Export dialog's Export, for scripts and the agent.
+// The Export dialog's Export, for scripts.
 static b8
 host_export(void* user_data, command_context* ctx, const cJSON* args, cJSON** out_result, char* error, size_t error_size)
 {
@@ -924,7 +922,7 @@ host_play_status(void* user_data, command_context* ctx, const cJSON* args, cJSON
     return true;
 }
 
-// The Viewport toolbar's buttons, for scripts and the agent.
+// The Viewport toolbar's buttons, for scripts.
 static b8
 host_play_set(void* user_data, command_context* ctx, const cJSON* args, cJSON** out_result, char* error, size_t error_size)
 {
@@ -948,14 +946,7 @@ host_play_set(void* user_data, command_context* ctx, const cJSON* args, cJSON** 
     if (!action)
         ;
     else if (strcmp(action, "play") == 0)
-    {
         play_start(state);
-        if (!play_active(&state->play))
-        {
-            snprintf(error, error_size, "can't play while a chat turn is running");
-            return false;
-        }
-    }
     else if (strcmp(action, "stop") == 0)
         play_stop(state);
     else if (strcmp(action, "pause") == 0 || strcmp(action, "resume") == 0)

@@ -61,19 +61,6 @@ add_executable(EncodingTests encoding_tests.c)
 target_link_libraries(EncodingTests PRIVATE PBR_Runtime)
 add_test(NAME EncodingTests COMMAND EncodingTests)
 
-# pbr_agent (agent/): its Python tests against ServerHost, when its virtual
-# environment has been set up (see agent/README.md).
-if(WIN32)
-    set(PBR_AGENT_PYTHON ${CMAKE_SOURCE_DIR}/agent/.venv/Scripts/python.exe)
-else()
-    set(PBR_AGENT_PYTHON ${CMAKE_SOURCE_DIR}/agent/.venv/bin/python)
-endif()
-if(EXISTS ${PBR_AGENT_PYTHON})
-    add_test(NAME AgentTests
-             COMMAND ${PBR_AGENT_PYTHON} -m unittest discover -s ${CMAKE_SOURCE_DIR}/agent/tests)
-    set_tests_properties(AgentTests PROPERTIES ENVIRONMENT "PBR_SERVER_HOST=$<TARGET_FILE:ServerHost>")
-endif()
-
 # Golden images: reference scenes rendered by the Game's --check, compared
 # with the pictures saved in tests/golden/ (see golden_tests.c, which also
 # says how to accept an intended change). Needs a GPU, hence the label:

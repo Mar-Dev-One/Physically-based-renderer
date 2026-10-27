@@ -11,7 +11,7 @@
 #include "cJSON.h"
 
 // The scene being edited: one World -- the single source of truth the
-// inspector, gizmo, console and agent all change through `commands` -- its
+// inspector, gizmo, console and scripts all change through `commands` -- its
 // undo history, its environment, the file it was opened from or saved to,
 // and what that file holds, which is how unsaved changes are noticed (every
 // command that changes the world bumps commands.revision).
@@ -30,13 +30,13 @@ typedef struct scene_document
     uint64            saved_revision;
     scene_environment saved_env;
 
-    // A scene.load (from the console, a script or the agent) renames the
+    // A scene.load (from the console or a script) renames the
     // document. Undoing the load must put the old name back -- or Ctrl+S
     // would write the old scene into the loaded one's file -- and redoing it
     // the loaded name. The load's undo step is known by its changes buffer
     // (unique, and it stays put as the history grows or drops old steps);
-    // it's found once the step is recorded (a chat turn records it when the
-    // turn ends).
+    // it's found once the step is recorded (a transaction records it when it
+    // commits).
     b8                load_watched;
     const void*       load_step;       // the step's history_step.changes; NULL until recorded
     b8                load_undone;
@@ -60,7 +60,7 @@ b8 doc_dirty(const scene_document* doc);
 void doc_mark_saved(scene_document* doc, const char* name);
 
 // A scene.save or a replacing scene.load run as a command (by anyone: the
-// menus, the console, a script, the agent) -- Commands.h's
+// menus, the console, a script) -- Commands.h's
 // cmd_scene_file_fn. The document now matches the file `name`; after a load,
 // undoing it gives the document its previous name back
 // (doc_follow_history()).

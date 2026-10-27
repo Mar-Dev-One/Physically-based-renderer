@@ -8,7 +8,7 @@
 #include "cJSON.h"
 
 // The one way anything outside the engine -- the debug console, the command
-// server, an MCP tool, the in-app agent -- changes a World. Every request is
+// server, a script -- changes a World. Every request is
 // JSON in, JSON out:
 //
 //   request:  { "cmd": "entity.create", "args": { "name": "lamp", ... } }
@@ -48,7 +48,7 @@ typedef enum cmd_scene_file_op
 
 // Called once a scene.save or a replacing scene.load has succeeded and
 // finished -- revision bumped, undo step recorded -- from whoever ran it (the
-// console, a script, the agent), so an app can track which file the world
+// console, a script), so an app can track which file the world
 // matches. `name` is the scene's name (scenes/<name>.json), only valid during
 // the call. Not called for commands inside a batch: the batch could still
 // fail and take a load back.
@@ -97,8 +97,8 @@ typedef struct command_context
     uint32                  host_command_count;
     void*                   host_user;
 
-    // A second table, for an engine module that brings commands of its own
-    // (the chat session, Chat/ChatSession.h), with its own user data.
+    // A second table, for an engine module that brings commands of its own,
+    // with its own user data.
     const cmd_host_command* module_commands;
     uint32                  module_command_count;
     void*                   module_user;
