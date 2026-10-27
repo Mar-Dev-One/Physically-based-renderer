@@ -440,7 +440,7 @@ test_export(void)
 
     project_export_options no_game = { ROOT "/bin/Missing.exe", ROOT "/engine", NULL, 0 };
     CHECK(!project_export(project, fresh, &no_game, &report, error, sizeof(error)));
-    CHECK(strstr(error, "Game target") != NULL);
+    CHECK(strstr(error, "no game executable") != NULL);
     CHECK(!file_is_directory(fresh));
 }
 

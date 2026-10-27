@@ -1,14 +1,13 @@
 # Roadmap
 
-The **engine** -- one static library, `PBR_Engine` -- with a testbed and the game runtime. On
-2026-10-27 the AI scene-builder track (a Python agent, an MCP server and an in-app chat panel) and
-then the editor were removed, to keep this a pure engine; their sections below are kept as
+The **engine** -- one static library, `PBR_Engine` -- with a testbed. On 2026-10-27 the AI
+scene-builder track (a Python agent, an MCP server and an in-app chat panel), the editor, the game
+runtime and its golden-image tests were removed, to keep this a pure engine; their sections below are kept as
 history. What they built for the engine stays: the World, projects and export
 (`project_export()`), the command layer with undo, the localhost command server, and the ImGui
 panels in `engine/src/UI/`.
 
-_Updated 2026-10-27._ Where things stand: `testbed/` builds a scene in code and draws it; the game
-plays a project's scenes and is what an export ships. The renderer
+_Updated 2026-10-27._ Where things stand: `testbed/` builds a scene in code and draws it. The renderer
 work under "Engine roadmap" has phases 1-3 done; its follow-ups and phases 4-7 are saved for later.
 
 ## Next up

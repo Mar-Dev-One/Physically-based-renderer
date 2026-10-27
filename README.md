@@ -1,7 +1,7 @@
 # PBR-Renderer
 
 A physically based renderer and game engine in C11 and OpenGL 4.6, built as a static library,
-with a testbed and a game runtime.
+with a testbed.
 
 - **Rendering**: Cook-Torrance GGX metallic-roughness shading, image-based lighting from HDRIs
   (multi-scatter, specular occlusion), cascaded shadow maps with filtered soft shadows, HDR
@@ -31,40 +31,15 @@ cmake --build build --config Release
 If you cloned without `--recursive`, run `git submodule update --init` first (GLFW, cglm and
 cimgui are submodules; the other dependencies are vendored in `engine/deps/`).
 
-This builds the engine as one static library, `PBR_Engine`, and two programs on it. Both find
-their files at runtime (the engine's shaders, and a project folder), so they can be started from
-any directory.
-
-- **Testbed** (`build/testbed/Release/Testbed.exe` with Visual Studio): builds a scene in code
-  with the World API -- a ground plane, a grid of spheres from smooth to rough (dielectric and
-  metal), a polished Suzanne turning on a pedestal, a sun, a point light and a spot light under an
-  HDRI sky -- and draws it. Left-drag orbits, the wheel zooms, Esc quits. `--check PNG` renders it
-  once in a hidden window and saves the picture; `--view NAME` shows a debug view (albedo,
-  normals, roughness, metallic, ao, shadow, lighting, wireframe, lights). Its
-  [main.c](testbed/main.c) is the shortest example of a program using the engine.
-- **Game** (`build/game/Release/Game.exe`): the game runtime, what an export ships. It plays a
-  project's scene with no UI, console or command server:
-  `Game [--width N] [--height N] [--fullscreen] [--project DIR] [--check PNG] [scene] [hdri]`, where
-  `scene` is a name under the project's `scenes/` (default: the project's startup scene) or a path
-  to a `.json` file, and `hdri` is a `.hdr` under the project that overrides the scene's own. The
-  project is `--project`, else a `project.json` next to the program (an exported game), else
-  `assets/`. The scene file carries its environment (HDRI, exposure, ambient strength, skybox). It
-  views the scene through its first Camera entity; without one, the camera frames the scene's
-  objects (not its ground plane), left-drag orbits and the wheel zooms. The window's title and
-  size come from the project. The game runs the scene's behaviours: a `Spin` component turns its
-  entity at `degrees_per_second`. Esc quits. A Debug build is a console program, so its log shows
-  in the terminal; a Release build opens no console and writes `log.txt` next to itself, and if it
-  has to close (no OpenGL 4.6, a startup scene that doesn't load) it says why in a message box
-  first.
-
-**Exporting a game.** `project_export()` ([engine/src/Project/Project.h](engine/src/Project/Project.h))
-makes a folder a player can run: the Game renamed after the project, the C++ runtime DLLs it
-needs, the engine's shaders, `project.json`, every saved scene, and only the models and HDRIs
-those scenes use. Build the Release game first so the export runs on PCs without Visual Studio:
-
-```sh
-cmake --build build --config Release --target Game
-```
+This builds the engine as one static library, `PBR_Engine`, and the **Testbed**
+(`build/testbed/Release/Testbed.exe` with Visual Studio) on it. The testbed builds a scene in code
+with the World API -- a ground plane, a grid of spheres from smooth to rough (dielectric and
+metal), a polished Suzanne turning on a pedestal, a sun, a point light and a spot light under an
+HDRI sky -- and draws it. Left-drag orbits, the wheel zooms, Esc quits. `--check PNG` renders it
+once in a hidden window and saves the picture; `--view NAME` shows a debug view (albedo, normals,
+roughness, metallic, ao, shadow, lighting, wireframe, lights). It finds the engine's shaders and
+the sample project at runtime, so it can be started from any directory, and its
+[main.c](testbed/main.c) is the shortest example of a program using the engine.
 
 ## Using the engine
 
@@ -134,7 +109,6 @@ engine/src/
   UI/              ImGui layer, entity panel, inspector, command console, log
 engine/shaders/    the engine's GLSL shaders
 testbed/           builds a scene in code and draws it -- the engine used as a library
-game/              the game runtime (plays a project's scene; no UI) -- what an export ships
 assets/            the default project: models, HDRIs, textures, scenes
 tests/             headless C tests and end-to-end server tests
 docs/              roadmap
@@ -144,24 +118,11 @@ docs/              roadmap
 
 ```sh
 ctest --test-dir build -C Release --output-on-failure
-ctest --test-dir build -C Release -LE gpu      # without the GPU test, e.g. on a build server
 ```
 
 The C tests are headless (no window or GL context), so they run anywhere. They cover the world,
 serialization, commands, undo history, placement, JSON-RPC and encoding. With Python 3 on the
 path, ctest also runs an end-to-end test of the WebSocket server.
-
-`GoldenTests` (label `gpu`) renders the reference scenes in `tests/golden/scenes/` with the game's
-`--check` and compares them with the saved pictures in `tests/golden/`. A failure leaves the render
-and a diff (changed pixels in red) in `build/tests/golden/`. When a rendering change is intended,
-save new pictures, look at them, and commit them:
-
-```sh
-build/tests/Release/GoldenTests --update            # every case
-build/tests/Release/GoldenTests --update avocado    # some
-```
-
-The saved pictures come from one GPU; on another, small rounding differences may need new ones.
 
 ## Dependencies
 

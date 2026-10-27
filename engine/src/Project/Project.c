@@ -929,7 +929,7 @@ project_export(const char* project_dir, const char* out_dir, const project_expor
     if (!project_read(project_dir, &settings, error, error_size))
         return false;
     if (!options->runtime_exe || !file_exists(options->runtime_exe))
-        return fail(error, error_size, "no game executable at %s; build the Game target",
+        return fail(error, error_size, "no game executable at %s",
                     options->runtime_exe ? options->runtime_exe : "(none given)");
 
     char shaders_dir[PROJECT_PATH_MAX];

@@ -2,8 +2,8 @@
 
 #include "Defines.h"
 
-// Starting and watching a child process -- e.g. the golden tests'
-// renders. No pipes: the child's stdout and
+// Starting and watching a child process -- e.g. checking an exported
+// game. No pipes: the child's stdout and
 // stderr go to a log file.
 
 typedef struct process process;

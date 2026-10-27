@@ -41,7 +41,6 @@
 
 #define HDRI "hdri/citrus_orchard_road_puresky_4k.hdr"
 
-// Same shadow setup as the game.
 #define SHADOW_MAP_SIZE 2048
 #define CASCADE_COUNT   4
 

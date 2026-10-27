@@ -2,13 +2,13 @@
 # runtime a game needs (window, RHI, renderer, models and assets, the World
 # and its scene files, project settings) and the tools on top (the command
 # layer and its undo history, the command server, the Dear ImGui panels).
-# game/, testbed/ and tests/ all link it.
+# testbed/ and tests/ link it.
 #
-# A game still carries none of the tools: a static library only contributes
-# the object files a program references, and runtime code never includes a
-# tools header (Commands/, Net/, UI/) -- App reaches a UI only through the
-# App.ui hook table (App.h). So the Game stays C only, without
-# ImGui's C++ or Winsock.
+# A program that uses only the runtime carries none of the tools: a static
+# library only contributes the object files a program references, and
+# runtime code never includes a tools header (Commands/, Net/, UI/) -- App
+# reaches a UI only through the App.ui hook table (App.h). So such a program
+# stays C only, without ImGui's C++ or Winsock.
 
 add_subdirectory(deps/glfw)
 add_subdirectory(deps/glad)
